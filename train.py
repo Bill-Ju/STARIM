@@ -10,7 +10,7 @@ from params import args
 from datetime import datetime
 from torch_geometric.loader import DataLoader
 
-from data_handler_0120 import MultiDataHandler
+from data_handler import MultiDataHandler
 from model.diffusion import Diffuion
 from torch import optim
 
@@ -103,7 +103,7 @@ class Exp:
         
 
     def save_history(self):  
-        print('=========================save prompt===============================')
+        print('=========================save medel===============================')
         
         # 获取当前日期
         today = datetime.today()
@@ -160,50 +160,29 @@ if __name__ == '__main__':
     ]
     datasets['direct_net'] = [
         'wiki-Vote','congress-twitter', 'soc-dolphins', 'bitcoin-alpha','bitcoin-otc'
-        # 'wiki-Vote','p2p-Gnutella05','p2p-Gnutella06','soc-Slashdot0811','bitcoin-alpha','bitcoin-otc',
     ]
     args.device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')
     print(args.device)
-    network_list = ['ca-GrQc','cora','ego-Facebook','fb-pages-food','Router','USA airports','Yeast'][1:3]
-    # network_list = ['Celegans','cora','fb-pages-food','Router']
-    # network_list = ['twitter']
+    network_list = ['ca-GrQc','Celegans', 'cora','ego-Facebook','fb-pages-food','Router','USA airports','Yeast'][0:2]
+
     print(args.meta)
-    # cascade_data_suffix_list = ['sir_beta0.02_gamma0.2', 'sir_beta0.12_gamma0.2', 'sir_beta0.12_gamma0.4', 'sir_beta0.16_gamma0.4', 'sir_beta0.01_gamma0.6', 'sir_beta0.2_gamma0.6', 'sir_beta0.02_gamma0.8', 'sir_beta0.16_gamma0.8']
-    # cascade_data_suffix_list = ['sir_beta0.01_gamma0.8', 'sir_beta0.02_gamma0.8', 'sir_beta0.05_gamma0.8', 'sir_beta0.08_gamma0.8', 'sir_beta0.12_gamma0.8', 'sir_beta0.16_gamma0.8', 'sir_beta0.2_gamma0.8']
-    # cascade_data_suffix_list = ['sir_beta0.01_gamma0.4', 'sir_beta0.02_gamma0.4', 'sir_beta0.05_gamma0.4', 'sir_beta0.08_gamma0.4', 'sir_beta0.12_gamma0.4', 'sir_beta0.16_gamma0.4', 'sir_beta0.2_gamma0.4']
-    # cascade_data_suffix_list = ['sir_beta0.02_gamma0.2', 'sir_beta0.02_gamma0.4', 'sir_beta0.02_gamma0.6', 'sir_beta0.08_gamma0.8', 'sir_beta0.08_gamma0.2', 'sir_beta0.08_gamma0.4', 'sir_beta0.08_gamma0.6', 'sir_beta0.08_gamma0.8', 'sir_beta0.16_gamma0.2', 'sir_beta0.16_gamma0.4', 'sir_beta0.16_gamma0.6', 'sir_beta0.16_gamma0.8']
-    # cascade_data_suffix_list = ['ic', 'lt_threshold0.2', 'lt_threshold0.4', 'lt_threshold0.6', 'sir_beta0.02_gamma0.4','sir_beta0.16_gamma0.4', 'sir_beta0.08_gamma0.2','sir_beta0.08_gamma0.8']
-    cascade_data_suffix_list = ['sir_beta0.1_gamma0.5', 'ic'][1:2]
+    cascade_data_suffix_list = ['sir_beta0.1_gamma0.5', 'ic'][0:1]
     dataset_list = []
     for net in network_list:
         for suffix in cascade_data_suffix_list:
             dataset = net + '@' + suffix
             dataset_list.append(dataset)
     
-    for net in datasets['direct_net']:
-        for suffix in cascade_data_suffix_list:
-            dataset = net + '@' + suffix + '_direct'
-            dataset_list.append(dataset)
+    # for net in datasets['direct_net']:
+    #     for suffix in cascade_data_suffix_list:
+    #         dataset = net + '@' + suffix + '_direct'
+    #         dataset_list.append(dataset)
     
     empirical_dataset_list = []
-    # dataset_list.append('ca-GrQc@sir_beta0.06256902022729498_gamma0.5')
-    # empirical_dataset_list.append('christianity@cas_1296000')
-    # empirical_dataset_list.append('twitter@cas_3600')
-    # empirical_dataset_list.append('douban@cas_1296000')
-    # empirical_dataset_list.append('android@cas_1296000')
-    # cas_network_list = ['christianity','twitter', 'douban', 'android'][0:1]
-    # cas_data_suffix_list = ['cas_10800','cas_2592000' ][1:2]
-    # for net in cas_network_list:
-    #     for suffix in cas_data_suffix_list:
-    #         dataset = net + '@' + suffix
-    #         dataset_list.append(dataset)
     handler = MultiDataHandler(dataset_list, empirical_dataset_list, args)
     
-    # dataset = exp.multi_data_handler.cascade_train_dataset
-    
     world_size = 3
-    # train_sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=0)
-    # exp.train_loader = DataLoader(dataset, batch_size=args.train_batch, sampler=train_sampler)
+
     mp.spawn(train, args=(world_size,handler, args), nprocs=world_size, join=True)
     
     

@@ -25,7 +25,7 @@ class RNNDecoder(nn.Module):
             [nn.Linear(hidden_channels, hidden_channels) for _ in range(3)]
         )
 
-        self.hidden_r = nn.Linear(1, 5, bias=False)
+        self.hidden_r = nn.Linear(hidden_channels, hidden_channels, bias=False)
         self.hidden_i = nn.Linear(hidden_channels, hidden_channels, bias=False)
         self.hidden_h = nn.Linear(hidden_channels, hidden_channels, bias=False)
 
