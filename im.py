@@ -6,14 +6,8 @@ from torch.optim import Adam, SGD
 from params import args
 
 from utils.data_handler import MultiDataHandler,DataHandler
-
-from torch_geometric.nn import MessagePassing
-
-from torch.optim.optimizer import Optimizer
-import numpy as np
-from torch.distributions import Normal
 from utils import graph_utils
-import time
+
 class Exp:
     def __init__(self, multi_data_handler):
         self.multi_data_handler = multi_data_handler
@@ -28,34 +22,22 @@ class Exp:
         for handler in handlers:
             graph, N = graph_utils.read_graph(handler.network_edges_path, ind=0, directed=directed)
             edge_index = handler.edge_index.t().contiguous().to(args.device)
-            # train_loader = handler.test_data_loader
+
             N = edge_index.max()+1
             
             seed_num = int(N*seed_rate)
-            y_true = torch.ones(N,1).to(args.device)
-            # y_true[:,2] = 1
+
+
             x_init = torch.ones(N).to(args.device)
-            # # x_init[:,1] = 1
-            # x_norm = l1_projection(x_init, seed_num)
-            # # x_norm = lp_projection_(x_init,1.2,seed_num)
-            # x_init.copy_(x_norm)
+
             x_init.requires_grad = True
 
             initial_momentum = 0.95
-            z_optimizer = SGD([x_init], lr=0.02, momentum=initial_momentum)
-            # z_optimizer = SGLDWithMomentum([x_init],lr=0.01,noise=0.005, momentum=initial_momentum, addnoise=True)
+            z_optimizer = SGD([x_init], lr=args.lr_z, momentum=initial_momentum)
             max_x = None
             max_influence_num = 0
             now_influence_num = 0
             self.model.backbone.requires_grad_(False) 
-            # if args.meta == 'Any':
-            #     self.model.backbone.requires_grad_(False)
-            #     if args.backbone == 'AdapterRNN':
-            #         self.model.prompts.requires_grad_(False)
-            #     else:
-            #         self.model.memory.requires_grad_(False)
-            #         self.model.prompt_t.requires_grad_(False)
-            # self.model.backbone.requires_grad_(False) 
             args.burn_in_steps = 0
             class BinaryActivationSTE(torch.autograd.Function):
                 @staticmethod
@@ -69,84 +51,33 @@ class Exp:
                     return grad_output
             self.model.eval()
             
-            inf1 = 0
-            begin = time.time()
+            lam = 10
+
             for i in range(2000):
                 z_optimizer.zero_grad()    
-                # seeds_t = x_init.unsqueeze(-1).unsqueeze(0).unsqueeze(0)
-                # x = BinaryActivationSTE.apply(torch.sigmoid(x_init))
                 x = BinaryActivationSTE.apply(x_init)
-                # # x = torch.zeros_like(x)
                 seeds_t = x.unsqueeze(-1).unsqueeze(0).unsqueeze(0)
-                # _, _, y_hat = sir(edge_index, x0=seeds_t)
-                
-                # infection_i = torch.sum(inflection * seeds_t, dim = 1)
-                if args.meta == 'Any':
-                    if args.backbone == 'AdapterRNN':
-                        feat_for_prompt = self.model.prompt[0].unsqueeze(0)
-                        context = F.leaky_relu(self.model.prompt_fc[0](feat_for_prompt))
-                        W_0, B_0, W_1,  B_1= self.model.memory(context)
-                        # W_0, W_1, B_0, B_1 = self.model.prompts(-1)
-                        y_hat = self.model.backbone(seeds_t, edge_index,W_0, B_0, W_1,  B_1, args)
-                    else:
-                        feat_for_prompt = self.model.prompt_t.unsqueeze(0)
 
-                        attention_weights = feat_for_prompt
-                        W_beta, B_beta, W_gamma, B_gamma= self.model.memory(attention_weights)
-              
-                        y_hat = self.model.backbone(seeds_t, edge_index,W_beta, B_beta, W_gamma, B_gamma, args)
-                        # with torch.no_grad():
-                        #     y_ = self.model.backbone(seeds_t_, edge_index,W_beta, B_beta, W_gamma, B_gamma, args)
-                        # print(seeds_t.sum())
-                    # y_hat = self.model.backbone(alpha_optimized.squeeze(0), beta_optimized.squeeze(0), input, edge_index, args)
-                    # y_hat = self.model.backbone(self.model.alpha_t, self.model.beta_t, input, edge_index, args)
-                elif args.meta == 'Maml':
-                    y_hat = self.model.backbone(input, edge_index, args)
-                else:
-                    y_hat = self.model.backbone(seeds_t, edge_index, args)
+                y_hat = self.model.backbone(seeds_t, edge_index, args)
                     
-                # loss = F.mse_loss(y_hat[0,-1,:,:], y_true) + 10*torch.abs(seeds_t.mean() - seed_rate)
-                loss = -y_hat[0,-1,:,:].mean() + 20*torch.abs(seeds_t.mean() - seed_rate)
+                loss = -y_hat[0,-1,:,:].sum() + lam*((seeds_t.sum() - seed_num)**2)
                 
                 loss.backward()
                 z_optimizer.step()
                 
-                # with torch.no_grad():
-                #     _, top_seeds_predict = torch.topk(x_init, seed_num, sorted=False)
-                #     x0 = torch.zeros(N).to(args.device)
-                #     x0[top_seeds_predict] = 1
-                #     seeds_t_ = x0.unsqueeze(-1).unsqueeze(0).unsqueeze(0)
-                #     # print(seeds_t_.sum())
-                #     if args.meta == 'Any':
-                #         if args.backbone == 'AdapterRNN':
-                #             feat_for_prompt = self.model.prompt[0].unsqueeze(0)
-                #             context = F.leaky_relu(self.model.prompt_fc[0](feat_for_prompt))
-                #             W_0, B_0, W_1,  B_1= self.model.memory(context)
-                #             # W_0, W_1, B_0, B_1 = self.model.prompts(-1)
-                #             y_hat = self.model.backbone(seeds_t_, edge_index,W_0, B_0, W_1,  B_1, args)
-                #         else:
-                #             feat_for_prompt = self.model.prompt_t.unsqueeze(0)
-
-                #             attention_weights = feat_for_prompt
-                #             W_beta, B_beta, W_gamma, B_gamma= self.model.memory(attention_weights)
-                #             y_ = self.model.backbone(seeds_t_, edge_index,W_beta, B_beta, W_gamma, B_gamma, args)
-                #             # print(seeds_t.sum())
-                #         # y_hat = self.model.backbone(alpha_optimized.squeeze(0), beta_optimized.squeeze(0), input, edge_index, args)
-                #         # y_hat = self.model.backbone(self.model.alpha_t, self.model.beta_t, input, edge_index, args)
-                #     elif args.meta == 'Maml':
-                #         y_hat = self.model.backbone(seeds_t_, edge_index, args)
-                #     else:
-                #         y_ = self.model.backbone(seeds_t_, edge_index, args)
+                with torch.no_grad():
+                    _, top_seeds_predict = torch.topk(x_init, seed_num, sorted=False)
+                    x0 = torch.zeros(N).to(args.device)
+                    x0[top_seeds_predict] = 1
+                    seeds_t_ = x0.unsqueeze(-1).unsqueeze(0).unsqueeze(0)
+  
+                    y_ = self.model.backbone(seeds_t_, edge_index, args)
                         
-                # now_influence_num = y_[0,-1,:,:].sum()
-                # with torch.no_grad():
-                #     x_init.clamp_(min=0.0, max=1.0)
-                #     x_init.copy_(l1_projection(x_init, seed_num))
-                
-                # print(now_influence_num)
-                # if now_influence_num >= max_influence_num:
-                #     max_influence_num = now_influence_num
-                #     max_x = x_init.clone().detach()
+                now_influence_num = y_[0,-1,:,:].sum()                
+                print(now_influence_num)
+                if now_influence_num >= max_influence_num:
+                    max_influence_num = now_influence_num
+                    max_x = x_init.clone().detach()
                 
                 # if i % 1000 == 0 and i >0:            
                     
@@ -171,28 +102,13 @@ class Exp:
                 #     "\t X_init_sum: {:.4f}".format(seeds_t.sum()),
                 #     "\t seed_num: {:.4f}".format(seed_num),
                 #     )
-            end = time.time()
-            all_time = end - begin
-            print(f"all_time:{all_time}")
-            
-    def load_model(self):
-        # network_list = ['cora', 'ego-Facebook', 'wiki-Vote', 'congress-twitter','soc-dolphins','bitcoin-alpha','bitcoin-otc']
-        network_list = ['ca-GrQc','Celegans','cora','fb-pages-food','Router','USA airports','Yeast'][:2]
-        # network_list = ['ca-GrQc','Celegans','cora','fb-pages-food','Router','USA airports','Yeast','wiki-Vote','congress-twitter', 'soc-dolphins']
-        # cascade_data_suffix_list = ['sir_beta0.06256902022729498_gamma0.5','sir_beta0.10821022969857398_gamma0.5','sir_beta0.009562987075975317_gamma0.5','sir_beta0.055542343770643404_gamma0.5', 'sir_beta0.006973839310519237_gamma0.5']
 
-        # cascade_data_suffix_list_ = cascade_data_suffix_list[:1]
+    def load_model(self):
+        network_list = ['ca-GrQc','Celegans','cora','fb-pages-food','Router','USA airports','Yeast'][:2]
         cass = '_'.join(cascade_data_suffix_list)
         network_list_ = network_list
         nets = '_'.join(network_list_)
 
-        # load_path = args.pwd+f'/result/{args.meta}/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_train_net_{nets}_2_19.mod'
-        # if args.feat_for_prompt:
-        #     load_path = args.pwd+f'/result/{args.meta}/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_tuning_net_{nets}_{cass}_ffp{args.feat_for_prompt}_feat_rand{args.feat_rand}_train_size{args.train_size_for_few_shot}.mod'
-        # else:
-        #     load_path = args.pwd+f'/result/{args.meta}/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_tuning_net_{nets}_{cass}_train_size{args.train_size_for_few_shot}.mod'
-
-        # load_path = args.pwd+f'/result/{args.meta}/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_train_net_{nets}_{cass}.mod'
         load_path = args.pwd+f'/result/{args.meta}/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_train_net_{nets}_{cass}_7_24.mod'
 
         
@@ -219,9 +135,6 @@ if __name__ == '__main__':
     print(args.device)
     args.mode = 'tuning'
     
-    # network_list = ['ca-GrQc']
-    # # cascade_data_suffix_list = ['sir_beta0.01_gamma0.5', 'sir_beta0.02_gamma0.5', 'sir_beta0.05_gamma0.5', 'sir_beta0.08_gamma0.5', 'sir_beta0.12_gamma0.5', 'sir_beta0.16_gamma0.5', 'sir_beta0.2_gamma0.5']
-    # cascade_data_suffix_list = ['ic']
     index = 11
     network_list = ['Celegans','deezer_europe','ca-GrQc','cora', 'ego-Facebook','fb-pages-food','wiki-Vote','soc-Slashdot0811','congress-twitter', 'soc-dolphins', 'soc-douban','cit-HepPh'][index:index+1]
     # cascade_data_suffix_list = ['sir_beta0.06256902022729498_gamma0.5','sir_beta0.10821022969857398_gamma0.5','sir_beta0.009562987075975317_gamma0.5','sir_beta0.055542343770643404_gamma0.5', 'sir_beta0.006973839310519237_gamma0.5'][index:index+1]

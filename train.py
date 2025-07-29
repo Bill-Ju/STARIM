@@ -163,7 +163,7 @@ if __name__ == '__main__':
     ]
     args.device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')
     print(args.device)
-    network_list = ['ca-GrQc','Celegans', 'cora','ego-Facebook','fb-pages-food','Router','USA airports','Yeast'][0:2]
+    network_list = ['ca-GrQc','Celegans', 'cora','ego-Facebook','fb-pages-food'][0:2]
 
     print(args.meta)
     cascade_data_suffix_list = ['sir_beta0.1_gamma0.5', 'ic'][0:1]
@@ -173,13 +173,7 @@ if __name__ == '__main__':
             dataset = net + '@' + suffix
             dataset_list.append(dataset)
     
-    # for net in datasets['direct_net']:
-    #     for suffix in cascade_data_suffix_list:
-    #         dataset = net + '@' + suffix + '_direct'
-    #         dataset_list.append(dataset)
-    
-    empirical_dataset_list = []
-    handler = MultiDataHandler(dataset_list, empirical_dataset_list, args)
+    handler = MultiDataHandler(dataset_list, args)
     
     world_size = 3
 
