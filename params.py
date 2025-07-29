@@ -15,7 +15,6 @@ def parse_args():
     parser.add_argument('--train_epoch', default=20, type=int, help='number of epochs')
     parser.add_argument('--load_model', default=True, help='if load model, True or False')
     parser.add_argument('--gpu', default='7', type=str, help='indicates which gpu to use')
-    parser.add_argument('--backbone', default='NRI', type=str, help='[NRI]')
     parser.add_argument('--data_mode', default='mix', type=str, help='[lt,sir]')
     parser.add_argument('--max_task_num', default=64, type=int, help='max_task_num')
     parser.add_argument('--tau', type=float, default=1,help='temperature for Gumbel Softmax')
@@ -23,6 +22,6 @@ def parse_args():
     parser.add_argument('--im_mode', default='sir', type=str, help='[sir, ic]')
     parser.add_argument('--window_size', default=32, type=int, help='rnn computation graph length')
     parser.add_argument('--sample_num', default=2000, type=int, help='sample_num')
-    
+    parser.add_argument('--propagation_data', default='ic', type=str, help='propagation data') 
     return parser.parse_args()
 args = parse_args()

@@ -1,7 +1,6 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-import torch.nn.init as init
 from model.NRI import RNN_decoder
 
 class Diffuion(nn.Module):
@@ -9,10 +8,8 @@ class Diffuion(nn.Module):
         super(Diffuion, self).__init__()
         self.device = args.device
         self.in_channels = args.in_channels
-        if args.backbone == 'NRI':
-            self.backbone = RNN_decoder.RNNDecoder(args)
-        else:
-            print("no such backbone")
+        self.backbone = RNN_decoder.RNNDecoder(args)
+
 
     def forward(self, batch, args):
         loss_sum = 0

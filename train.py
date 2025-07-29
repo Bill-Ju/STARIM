@@ -54,7 +54,6 @@ class Exp:
             self.load_model()
         
     def train(self, rank, world_size, args):
-        # self.setup(rank,world_size)
         self.model.train()
 
         print('==========================train==============================')
@@ -105,23 +104,12 @@ class Exp:
     def save_history(self):  
         print('=========================save medel===============================')
         
-        # 获取当前日期
-        today = datetime.today()
-
         # 提取月和日
-        month = today.month
-        day = today.day
         self.model.eval()
         content = {
             'model': self.model.cpu(),
-            'loss' : self.loss.cpu()
         }
-        network_list = self.multi_data_handler.nets
-        cascade_data_suffix_list = ['sir_beta0.1_gamma0.5', 'ic'][1:2]
-        cass = '_'.join(cascade_data_suffix_list)
-        nets = '_'.join(network_list)
-
-        save_path = args.pwd+f'/result/{args.meta}/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_train_net_{nets}_{cass}_{month}_{day}.mod'
+        save_path = args.pwd+f'/result/{args.data_mode}/models/train_net.mod' 
         dir_name = os.path.dirname(save_path)
         # 如果目录不存在，则创建目录
         if not os.path.exists(dir_name):
@@ -131,12 +119,8 @@ class Exp:
         print(f'Model Saved, Save path:{save_path}')
         
     def load_model(self):
-        network_list = self.multi_data_handler.nets
-        cascade_data_suffix_list = ['sir_beta0.1_gamma0.5', 'ic'][1:2]
-        cass = '_'.join(cascade_data_suffix_list)
-        nets = '_'.join(network_list)
       
-        load_path = args.pwd+f'/result/{args.meta}/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_train_net_{nets}_{cass}_2_26.mod'
+        load_path = args.pwd+f'/result/{args.data_mode}/models/train_net.mod'
         # 检查路径是否存在
         if os.path.exists(load_path):
             print(f"文件存在: {load_path}")
@@ -165,13 +149,13 @@ if __name__ == '__main__':
     print(args.device)
     network_list = ['ca-GrQc','Celegans', 'cora','ego-Facebook','fb-pages-food'][0:2]
 
-    print(args.meta)
-    cascade_data_suffix_list = ['sir_beta0.1_gamma0.5', 'ic'][0:1]
+
     dataset_list = []
+    suffix = args.propagation_data
+    
     for net in network_list:
-        for suffix in cascade_data_suffix_list:
-            dataset = net + '@' + suffix
-            dataset_list.append(dataset)
+        dataset = net + '@' + suffix
+        dataset_list.append(dataset)
     
     handler = MultiDataHandler(dataset_list, args)
     
