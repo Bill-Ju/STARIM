@@ -10,7 +10,7 @@ from params import args
 from datetime import datetime
 from torch_geometric.loader import DataLoader
 
-from data_handler import MultiDataHandler
+from utils.data_handler import MultiDataHandler
 from model.diffusion import Diffuion
 from torch import optim
 
