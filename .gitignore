@@ -208,5 +208,5 @@ __marimo__/
 
 result/
 scripts/
-data/
+data/**/*.npy
 .vscode/
