@@ -10,31 +10,26 @@ STARIM proposes a novel model-based optimization framework for influence maximiz
 
 To get started with the code and reproduce our results, please follow the instructions below.
 
-## Install Required Packages
 pip install -r requirements.txt
 
-## Running the Code
 You can test the performance of the two main variants of STARIM: STAR-M (Model-based) and STAR-N (Neural-based).
 
-1. Test STAR-M (Model-based STARIM)
+# 1. Test STAR-M (Model-based STARIM)
 STAR-M directly leverages a mechanistic propagation model for influence estimation, making it straightforward to run.
 
 python STAR-M.py
 
-2. Test STAR-N (Neural-based STARIM)
+# 2. Test STAR-N (Neural-based STARIM)
 STAR-N utilizes a learned neural network to model the propagation process. This requires generating specific training data (propagation trajectories) and training the neural propagation model beforehand.
 
-# Step 1: Generate propagation trajectory training data
-# This script will generate the necessary data files in the 'data' directory.
+Step 1: Generate propagation trajectory training data .This script will generate the necessary data files in the 'data' directory.
 
 cd data
 python generate_train_data_traj.py
 cd ..
 
-# Step 2: Train the neural propagation model
-# This step trains the GNN-based propagation model.
+Step 2: Train the neural propagation model. This step trains the GNN-based propagation model.
 python train_model.py -pwd /path/to/your/STARIM -propagation_data ic
 
-# Step 3: Run STAR-N for influence maximization
-# After the model is trained, execute STAR-N to find the optimal seed set.
+Step 3: Run STAR-N for influence maximization. After the model is trained, execute STAR-N to find the optimal seed set.
 python STAR-N.py -pwd /path/to/your/STARIM -propagation_data ic
