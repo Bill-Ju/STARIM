@@ -17,7 +17,9 @@ You can test the performance of the two main variants of STARIM: STAR-M (Model-b
 # 1. Test STAR-M (Model-based STARIM)
 STAR-M directly leverages a mechanistic propagation model for influence estimation, making it straightforward to run.
 
+```bash
 python STAR-M.py
+```
 
 # 2. Test STAR-N (Neural-based STARIM)
 STAR-N utilizes a learned neural network to model the propagation process. This requires generating specific training data (propagation trajectories) and training the neural propagation model beforehand.
