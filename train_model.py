@@ -11,7 +11,7 @@ from datetime import datetime
 from torch_geometric.loader import DataLoader
 
 from utils.data_handler import MultiDataHandler
-from model.diffusion import Diffuion
+from model.nn_model import Diffuion
 from torch import optim
 
 class Exp:
@@ -19,33 +19,18 @@ class Exp:
         self.multi_data_handler = multi_data_handler
     
     def run(self, rank, world_size, args):
-        # 在所有进程中都设置环境变量，确保进程可以正确读取这些环境变量
         os.environ['WORLD_SIZE'] = str(world_size)
         os.environ['RANK'] = str(rank)
-
-
-        os.environ['MASTER_ADDR'] = 'localhost'  # 或者主节点的IP地址
-        os.environ['MASTER_PORT'] = '12366'     # 设置端口号
-        
-        # 初始化分布式进程组，所有进程都需要调用这个
+        os.environ['MASTER_ADDR'] = 'localhost'  
+        os.environ['MASTER_PORT'] = '12366'     
         dist.init_process_group("nccl", rank=rank, world_size=world_size)
-        
-        # 准备模型，加载模型（如果需要）
         self.prepare_model(args)
         if args.load_model:
             self.load_model()
-        
-        # 训练过程
         self.train(rank, world_size, args)
-        
-        # 使用 barrier 确保所有进程同步
         dist.barrier()
-
-        # 只有 rank 为 0 的进程进行保存
         if rank == 0:
             self.save_history()
-
-        # 销毁进程组
         dist.destroy_process_group()
         
     def prepare_model(self, args):
@@ -145,17 +130,18 @@ if __name__ == '__main__':
     datasets['direct_net'] = [
         'wiki-Vote','congress-twitter', 'soc-dolphins', 'bitcoin-alpha','bitcoin-otc'
     ]
-    args.device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')
-    print(args.device)
-    network_list = ['ca-GrQc','Celegans', 'cora','ego-Facebook','fb-pages-food'][0:2]
 
-
+    train_network_list = ['ca-GrQc','Celegans', 'cora','ego-Facebook','fb-pages-food'][0:2]
     dataset_list = []
     suffix = args.propagation_data
     
-    for net in network_list:
-        dataset = net + '@' + suffix
-        dataset_list.append(dataset)
+    for net in train_network_list:
+        if net in datasets['undirect_net']:
+            dataset = net + '@' + suffix
+            dataset_list.append(dataset)
+        elif net in datasets['direct_net']:
+            dataset = net + '@' + 'direct' + '@'+ suffix
+            dataset_list.append(dataset)
     
     handler = MultiDataHandler(dataset_list, args)
     

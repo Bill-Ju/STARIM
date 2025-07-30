@@ -51,7 +51,7 @@ class Exp:
                 self.edge_index.append([edge[0], edge[1]])
         edge_index = torch.tensor(self.edge_index).t().contiguous().to(args.device)
         
-        graph, N = graph_utils.read_graph(handler.network_edges_path, ind=0, directed=directed)
+        graph, N = graph_utils.read_graph(self.network_edges_path, ind=0, directed=directed)
         
 
             
@@ -100,29 +100,26 @@ class Exp:
                 max_influence_num = now_influence_num
                 max_x = x_init.clone().detach()
                 
-                # if i % 1000 == 0 and i >0:            
+                if i % 1000 == 0 and i >0:            
                     
-                #     _, top_seeds_predict = torch.topk(max_x, seed_num, sorted=False)
-                #     list_pre = top_seeds_predict.tolist()
+                    _, top_seeds_predict = torch.topk(max_x, seed_num, sorted=False)
+                    list_pre = top_seeds_predict.tolist()
                     
-                #     time = 1000
+                    time = 1000
                     
-                #     if mode=='sir':
-                #         beta = 0.1
-                #         gamma = 0.5
-                #         inf1 = graph_utils_.workerMC_SIR([graph, list_pre, time, beta,gamma]).sum()
-                #     elif mode=='ic':
-                #         inf1 = graph_utils_.computeMC_IC(graph,list_pre,time).sum()
-                #     print(inf1/N)
-                #     print(list_pre)
-                # print(inf1/N)
-                # print('Iteration: {}'.format(i+1),
-                #     '\t Loss:{:.5f}'.format(loss.item()),
-                #     "\t Now_influence_num: {:.4f}".format(now_influence_num),
-                #     "\t Infection_mk: {:.9f}".format(inf1/N),
-                #     "\t X_init_sum: {:.4f}".format(seeds_t.sum()),
-                #     "\t seed_num: {:.4f}".format(seed_num),
-                #     )
+                    if mode=='sir':
+                        beta = 0.1
+                        gamma = 0.5
+                        inf = graph_utils.workerMC_SIR([graph, list_pre, time, beta,gamma]).sum()
+                    elif mode=='ic':
+                        inf = graph_utils.computeMC_IC(graph,list_pre,time).sum()
+                print('Iteration: {}'.format(i+1),
+                    '\t Loss:{:.5f}'.format(loss.item()),
+                    "\t Now_influence_num: {:.4f}".format(now_influence_num),
+                    "\t Infection_mk: {:.9f}".format(inf/N),
+                    "\t X_init_sum: {:.4f}".format(seeds_t.sum()),
+                    "\t seed_num: {:.4f}".format(seed_num),
+                    )
 
     def load_model(self):
         load_path = args.pwd+f'/result/{args.data_mode}/models/' + args.backbone + f'/{args.backbone}_train_net.mod'

@@ -1,0 +1,5 @@
+networkx==3.4.2
+scikit-learn==1.6.1
+torch==2.7.0
+torch_geometric==2.5.2
+torchaudio==2.7.0
