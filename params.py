@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument('--train_epoch', default=20, type=int, help='number of epochs')
     parser.add_argument('--load_model', default=True, help='if load model, True or False')
     parser.add_argument('--gpu', default='7', type=str, help='indicates which gpu to use')
-    parser.add_argument('--data_mode', default='mix', type=str, help='[lt,sir]')
+    parser.add_argument('--data_mode', default='ic', type=str, help='[ic, sir]')
     parser.add_argument('--max_task_num', default=64, type=int, help='max_task_num')
     parser.add_argument('--tau', type=float, default=1,help='temperature for Gumbel Softmax')
     parser.add_argument('--im_seed_rate', type=float, default=0.05,help='seed_rate')

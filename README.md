@@ -26,6 +26,7 @@ STAR-N utilizes a learned neural network to model the propagation process. This 
 
 # Step 1: Generate propagation trajectory training data
 # This script will generate the necessary data files in the 'data' directory.
+
 cd data
 python generate_train_data_traj.py
 cd ..

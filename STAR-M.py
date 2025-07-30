@@ -21,12 +21,12 @@ class BinaryActivationSTE(torch.autograd.Function):
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-
+model = 'ic'
 network_index = 4
 seed_index = 0
 seed_rates = [0.01,0.05,0.10,0.20,0.30]
 seed_rate = seed_rates[seed_index]
-NetWorks = ['deezer_europe','email-Enron','ca-GrQc','Celegans','cora','ego-Facebook','fb-pages-food','Lastfm_asia','musae-github','roadNet-CA','Router','Soc-hamsterster', 'USA airports','Yeast','wiki-Talk','wiki-Vote','p2p-Gnutella05','soc-Slashdot0811','soc-dolphins','congress-twitter','bitcoin-alpha','bitcoin-otc','cit-HepPh','soc-douban']
+NetWorks = ['deezer_europe','email-Enron','ca-GrQc','Celegans','cora','ego-Facebook','fb-pages-food','wiki-Vote','soc-dolphins','cit-HepPh','soc-douban']
 direct = True
 network = NetWorks[network_index]
 print('Reading {} edgelist'.format(network))
@@ -59,7 +59,7 @@ gamma = 0.5 # 免疫率
 beta = 0.1
 steps = 10
 seed_num = int(N* seed_rate)
-model = 'ic'
+
 if model == 'sir':
     sir = SIR(N,beta,gamma,50,steps,device).to(device)
 else:
