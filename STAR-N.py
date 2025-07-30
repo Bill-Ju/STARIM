@@ -140,7 +140,7 @@ if __name__ == '__main__':
     index = 11
     network_list = ['Celegans','deezer_europe','ca-GrQc','cora', 'ego-Facebook','fb-pages-food','wiki-Vote','soc-Slashdot0811','congress-twitter', 'soc-dolphins', 'soc-douban','cit-HepPh'][index:index+1]
     cascade_data_suffix_list = ['sir_beta0.1_gamma0.5','ic'][1:2]
-    mode = 'ic'
+    mode = args.propagation_data
     seed_rate = 0.05
     directed = True
 

@@ -33,8 +33,8 @@ cd ..
 
 # Step 2: Train the neural propagation model
 # This step trains the GNN-based propagation model.
-python train_model.py
+python train_model.py -pwd /path/to/your/STARIM -propagation_data ic
 
 # Step 3: Run STAR-N for influence maximization
 # After the model is trained, execute STAR-N to find the optimal seed set.
-python STAR-N.py
+python STAR-N.py -pwd /path/to/your/STARIM -propagation_data ic
