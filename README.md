@@ -24,12 +24,22 @@ STAR-N utilizes a learned neural network to model the propagation process. This 
 
 Step 1: Generate propagation trajectory training data .This script will generate the necessary data files in the 'data' directory.
 
+```bash
 cd data
+
 python generate_train_data_traj.py
+
 cd ..
+```
 
 Step 2: Train the neural propagation model. This step trains the GNN-based propagation model.
+
+```bash
 python train_model.py -pwd /path/to/your/STARIM -propagation_data ic
+```
 
 Step 3: Run STAR-N for influence maximization. After the model is trained, execute STAR-N to find the optimal seed set.
+
+```bash
 python STAR-N.py -pwd /path/to/your/STARIM -propagation_data ic
+```
