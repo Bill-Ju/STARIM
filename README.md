@@ -10,7 +10,9 @@ STARIM proposes a novel model-based optimization framework for influence maximiz
 
 To get started with the code and reproduce our results, please follow the instructions below.
 
+```bash
 pip install -r requirements.txt
+```
 
 You can test the performance of the two main variants of STARIM: STAR-M (Model-based) and STAR-N (Neural-based).
 
